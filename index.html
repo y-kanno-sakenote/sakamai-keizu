@@ -6,7 +6,7 @@
 <title>酒米の系図</title>
 <style>
 :root{
-  --bg:#F7F3EA; --ink:#2A2724; --mute:#8C857B; --line:#DDD5C6;
+  --bg:#F7F3EA; --ink:#2A2724; --ine:#A8781E; --mute:#8C857B; --line:#DDD5C6;
   --mom:#B8432F; --dad:#2F4C7A; --unk:#8C857B; --sel:#5E7A45; --alt:#C27A2C;
   --mincho:"Hiragino Mincho ProN","Yu Mincho","Noto Serif JP",serif;
 }
@@ -81,11 +81,16 @@ nav.nav a.on{color:var(--ink)}
 .mnote{font-size:13px;color:var(--mute);margin-top:2px}
 #msvg{display:block;width:100%;height:auto;margin:8px 0 0}
 #msvg .tile{stroke:var(--bg);stroke-width:1.5;cursor:pointer}
-#msvg .tile.t0{fill:#EDE6D8}
-#msvg .tile.t1{fill:var(--ink);fill-opacity:.15}
-#msvg .tile.t2{fill:var(--ink);fill-opacity:.35}
-#msvg .tile.t3{fill:var(--ink);fill-opacity:.6}
-#msvg .tile.t4{fill:var(--ink);fill-opacity:.9}
+#mapv .tile.t0{fill:#EDE6D8}
+#mapv .tile.t1{fill:var(--ink);fill-opacity:.15}
+#mapv .tile.t2{fill:var(--ink);fill-opacity:.35}
+#mapv .tile.t3{fill:var(--ink);fill-opacity:.6}
+#mapv .tile.t4{fill:var(--ink);fill-opacity:.9}
+/* 品種の画面：稲穂の黄土色の濃淡（朱・藍・緑・柿は系図で使うので避ける） */
+#mapv.ine .tile.t1{fill:var(--ine);fill-opacity:.22}
+#mapv.ine .tile.t2{fill:var(--ine);fill-opacity:.45}
+#mapv.ine .tile.t3{fill:var(--ine);fill-opacity:.72}
+#mapv.ine .tile.t4{fill:#7A5612;fill-opacity:1}
 #msvg .born{fill:none;stroke:var(--ink);stroke-width:2.5;vector-effect:non-scaling-stroke;pointer-events:none}
 #msvg text{font-size:19px;fill:var(--ink);pointer-events:none;dominant-baseline:central}
 #msvg text.l3{font-size:15px}
@@ -98,6 +103,7 @@ nav.nav a.on{color:var(--ink)}
 .mlh{display:flex;align-items:baseline;gap:10px;font-size:13px;color:var(--mute);margin-bottom:4px}
 .mlh span{padding:6px 0}
 .mpr{margin:16px 0 0;border-top:1px solid var(--line)}
+.mpr.mrest{margin:0;border-top:none}
 .mpr summary{padding:11px 0;font-size:13px;color:var(--dad);cursor:pointer}
 .mlist ol{list-style:none;margin:0;padding:0}
 .mlist a.mr{display:flex;align-items:center;gap:10px;min-height:40px;padding:0 8px;color:var(--ink);text-decoration:none;border-bottom:1px solid var(--line)}
@@ -105,7 +111,6 @@ nav.nav a.on{color:var(--ink)}
 .mr .rk{width:2em;text-align:right;font-size:13px;color:var(--mute)}
 .mr .nm{font-family:var(--mincho);font-size:16px;flex:1}
 .mr .tt{font-size:13px;color:var(--mute);white-space:nowrap}
-.mlist .more{min-height:40px;padding:4px 0;border:none;background:none;color:var(--dad);font-size:15px;text-decoration:underline;cursor:pointer}
 @media (max-width:480px){ #msvg{width:calc(100% + 32px);margin-left:-16px;margin-right:-16px} }
 /* ---------- 一族・全体の木 ---------- */
 #treev{padding:10px 0 0}
@@ -525,7 +530,7 @@ function cardHTML(v, st){
   if(!cult.length) c = "令和7年産の記録なし";
   else {
     c = esc(cult.slice(0, 5).map(x => x[0]).join("・")) + (cult.length > 5 ? "…ほか" + (cult.length - 5) + "県" : "");
-    c += '<div>全国 ' + (v.cult_total >= 1 ? v.cult_total.toLocaleString("ja-JP") + " t" : "1 t未満") + '（令和7年産）</div>';
+    c += '<div>全国 ' + (v.cult_total >= 1 ? v.cult_total.toLocaleString("ja-JP") + " t" : "1 t未満") + '（令和7年産速報値）</div>';
   }
   rows.push(["作っている県", c]);
   if(v.cat) rows.push(["区分", esc(v.cat)]);
@@ -708,9 +713,8 @@ const TILES = {"北海道":[27,0],"青森":[25,1.25],"秋田":[24,2.25],"岩手"
   "大分":[7,9.45],"高知":[11,9.55],"徳島":[13,9.55],"鹿児島":[4,10.45],"宮崎":[6,10.45],"沖縄":[1,11.2]};
 const RANK = D.varieties.filter(v => v.cult && Object.keys(v.cult).length)
   .sort((a, b) => (b.cult_total - a.cult_total) || a.name.localeCompare(b.name, "ja"));
-const RANK_MAX = 20, PREF_MAX = 12;
 // 地図の状態は「全国／県 mPref／品種 mSel」のどれか1つ
-let mapBuilt = false, mSel = null, mPref = null, mAll = false;
+let mapBuilt = false, mSel = null, mPref = null;
 // 県の検査数量（県計）。沖縄は検査なし（total が null）
 const PREFS_T = D.prefs || {};
 const PRANK = Object.keys(TILES).sort((a, b) => ((PREFS_T[b] || {}).total ?? -1) - ((PREFS_T[a] || {}).total ?? -1) || a.localeCompare(b, "ja"));
@@ -729,7 +733,7 @@ const HR = 33, HW = Math.sqrt(3) / 2 * HR, HVS = 1.5 * HR;
 function buildMap(){
   const v = document.getElementById("mapv");
   v.innerHTML = '<div class="mhead" id="mhead"></div><div id="mamt"></div><div class="mnote" id="mnote"></div><svg id="msvg" role="group" aria-label="都道府県の地図"></svg>' +
-    '<div class="mleg">' + [1,2,3,4].map(t => '<svg viewBox="0 0 14 16"><polygon points="' + hexPts(7, 8, 7) + '" fill="#2A2724" fill-opacity="' + [0,.15,.35,.6,.9][t] + '"/></svg>').join("") + '<span>色が濃いほど多い</span></div>' +
+    '<div class="mleg" id="mleg">' + [1,2,3,4].map(t => '<svg viewBox="0 0 14 16"><polygon class="tile t' + t + '" points="' + hexPts(7, 8, 7) + '"/></svg>').join("") + '<span id="mlegt"></span></div>' +
     '<div class="mlist" id="mlist"></div>';
   const svg = document.getElementById("msvg");
   let h = "", x0 = 1e9, x1 = -1e9, y0 = 1e9, y1 = -1e9;
@@ -746,10 +750,6 @@ function buildMap(){
   const pick = e => { const g = e.target.closest && e.target.closest("g[data-p]"); if(g){ location.hash = !mSel && mPref === g.dataset.p ? mapHash(null) : prefHash(g.dataset.p); } };
   svg.addEventListener("click", pick);
   svg.addEventListener("keydown", e => { if(e.key === "Enter" || e.key === " "){ e.preventDefault(); pick(e); } });
-  document.getElementById("mlist").addEventListener("click", e => {
-    const b = e.target.closest("button");
-    if(b && b.dataset.k === "more"){ mAll = true; drawMap(); }
-  });
   mapBuilt = true;
 }
 function drawMap(){
@@ -761,46 +761,51 @@ function drawMap(){
   if(mSel){
     head = zen + '<span class="mn">' + esc(mSel) + '</span>' +
       (v && v.pref ? '<span class="mb">' + esc(v.pref) + '生まれ</span>' : "") + '<a class="mg" href="' + href(mSel) + '">系図 →</a>';
-    if(has) amt = '<div class="mamt">検査数量 ' + amountText(v.cult_total) + '・全国' + rankIn(VVALS, v.cult_total) + '位</div>';
+    if(has) amt = '<div class="mamt">令和7年産（速報値）の検査数量 ' + amountText(v.cult_total) + '・全国' + rankIn(VVALS, v.cult_total) + '位</div>';
     else note = "令和7年産の記録なし";
   } else if(mPref){
     head = zen + '<span class="mn">' + esc(mPref) + '</span>';
     if(pt.total == null) amt = '<div class="mamt">令和7年産の検査なし</div>';
-    else amt = '<div class="mamt">検査数量 ' + amountText(pt.total) + '・全国' + prefRank(mPref) + '位</div>' +
+    else amt = '<div class="mamt">令和7年産（速報値）の検査数量 ' + amountText(pt.total) + '・全国' + prefRank(mPref) + '位</div>' +
       (pt.outside > 0 ? '<div class="mamt">うち品種の内訳に出ない分 ' + amountText(pt.outside) + '</div>' : "");
-  } else head = '<span class="mn">全国</span><span class="mb">令和7年産の検査数量</span>';
+  } else head = '<span class="mn">全国</span><span class="mb">令和7年産（速報値）の検査数量</span>';
   document.getElementById("mhead").innerHTML = head;
   document.getElementById("mamt").innerHTML = amt;
   document.getElementById("mnote").textContent = note;
   const frame = mSel ? (v && v.pref) : mPref;
+  // 品種の画面だけ稲穂の黄土色、全国・県は墨（県計）
+  document.getElementById("mapv").classList.toggle("ine", !!mSel);
+  document.getElementById("mlegt").textContent = mSel ? mSel + "の検査数量" : "県の検査数量（全品種の合計）";
   for(const g of document.querySelectorAll("#msvg g[data-p]")){
     const p = g.dataset.p;
     const t = mSel ? (p in cult ? tierOf(cult[p], true) : 0) : prefTier((PREFS_T[p] || {}).total);
     g.querySelector(".tile").setAttribute("class", "tile t" + t);
     g.querySelector(".born").setAttribute("display", frame === p ? "inline" : "none");
-    g.querySelector("text").setAttribute("class", (t === 0 ? "k0" : t >= 3 ? "w" : "") + (p.length > 2 ? " l3" : ""));
+    g.querySelector("text").setAttribute("class", (t === 0 ? "k0" : t >= (mSel ? 4 : 3) ? "w" : "") + (p.length > 2 ? " l3" : ""));
   }
   const row = (hash, name, rk, tt) => '<li><a class="mr" href="' + hash + '"><span class="rk">' + rk + '</span><span class="nm">' + esc(name) + '</span><span class="tt">' + tt + '</span></a></li>';
-  const more = (n, unit) => !mAll && n > 0 ? '<button class="more" type="button" data-k="more">… ほか' + n + unit + '</button>' : "";
+  // ベスト10（10位の同順位は全部入れる）まで見せ、11位以下は折りたたみ
+  const top10 = (items, unit) => { const vis = items.filter(x => x[2] <= 10), rest = items.filter(x => x[2] > 10);
+    return '<ol>' + vis.map(x => row(...x)).join("") + '</ol>' +
+      (rest.length ? '<details class="mpr mrest"><summary>11位以下（' + rest.length + unit + '）</summary><ol>' + rest.map(x => row(...x)).join("") + '</ol></details>' : ""); };
   const lh = s => '<div class="mlh"><span>' + esc(s) + '</span></div>';
   let h = "";
   if(mSel){
     if(has){
       const ps = Object.keys(cult).sort((a, b) => (cult[b] - cult[a]) || a.localeCompare(b, "ja"));
-      const vals = ps.map(p => cult[p]), vis = mAll ? ps : ps.slice(0, PREF_MAX);
-      h = lh(mSel + "の県の順位") + '<ol>' + vis.map(p => row(prefHash(p), p, rankIn(vals, cult[p]), amountText(cult[p]))).join("") + '</ol>' + more(ps.length - vis.length, "県");
+      const vals = ps.map(p => cult[p]);
+      h = lh(mSel + "の県の順位") + top10(ps.map(p => [prefHash(p), p, rankIn(vals, cult[p]), amountText(cult[p])]), "県");
     }
   } else if(mPref){
     if(pt.total != null){
       const ls = D.varieties.filter(o => o.cult && mPref in o.cult).sort((a, b) => (b.cult[mPref] - a.cult[mPref]) || a.name.localeCompare(b.name, "ja"));
-      const vals = ls.map(o => o.cult[mPref]), vis = ls;   // 県の画面は全品種を出す
+      const vals = ls.map(o => o.cult[mPref]);
       h = ls.length
-        ? lh(mPref + "の品種の順位") + '<ol>' + vis.map(o => row(mapHash(o.name), o.name, rankIn(vals, o.cult[mPref]), amountText(o.cult[mPref]))).join("") + '</ol>'
+        ? lh(mPref + "の品種の順位") + top10(ls.map(o => [mapHash(o.name), o.name, rankIn(vals, o.cult[mPref]), amountText(o.cult[mPref])]), "品種")
         : '<div class="say">品種の内訳は資料に出ていません</div>';
     }
   } else {
-    const vis = mAll ? RANK : RANK.slice(0, RANK_MAX);
-    h = lh("全国の品種の順位") + '<ol>' + vis.map(o => row(mapHash(o.name), o.name, rankIn(VVALS, o.cult_total), amountText(o.cult_total))).join("") + '</ol>' + more(RANK.length - vis.length, "品種") +
+    h = lh("全国の品種の順位") + top10(RANK.map(o => [mapHash(o.name), o.name, rankIn(VVALS, o.cult_total), amountText(o.cult_total)]), "品種") +
       '<details class="mpr"><summary>県の順位</summary><ol>' + PRANK.map(p => { const tt = (PREFS_T[p] || {}).total;
         return row(prefHash(p), p, tt == null ? "" : prefRank(p), tt == null ? "検査なし" : amountText(tt)); }).join("") + '</ol></details>';
   }
@@ -813,7 +818,6 @@ function showMap(name, pref){
   const was = mSel + "|" + mPref;
   mSel = name || null; mPref = mSel ? null : (pref || null);
   if(mSel) cur = mSel;
-  mAll = false;
   drawMap(); navUpdate("m");
   if(was !== mSel + "|" + mPref) window.scrollTo(0, 0);   // 画面を替えたら地図の見出しへ戻す
 }
