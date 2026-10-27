@@ -148,24 +148,38 @@ nav.nav a.on{color:var(--ink)}
 .tr.wh.zb g.n.on > text{display:inline;fill:var(--ink);font-size:calc(15px * var(--ik,1));stroke:var(--bg);stroke-width:calc(4px * var(--ik,1));paint-order:stroke;stroke-linejoin:round;font-weight:700}
 .tbox .go{position:absolute;left:10px;bottom:10px;min-height:36px;display:flex;align-items:center;padding:4px 12px;border:1px solid var(--ink);border-radius:6px;background:var(--ink);color:#fff;font-size:14px;text-decoration:none}
 .tbox .go[hidden]{display:none}
-/* 祖父母の段 */
-section.gpar{margin-bottom:2px}
-.gp2,.row.g2{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);gap:0 8px;width:100%}
-.gp2{align-items:end}
-.row.g2{align-items:center}
-.row.g2>*{justify-self:center;max-width:100%}
-.gx{visibility:hidden}
-.gp1{display:flex;justify-content:center;width:100%}
-.gc{display:flex;flex-direction:column;align-items:center;text-align:center;min-width:0}
-.gl{min-height:36px;display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:0 3px;font-family:var(--mincho);font-size:14px;line-height:1.3}
-.gl .gn{color:var(--ink);text-decoration:none;padding:4px 2px}
-.gl .gm{color:var(--mute)}
-.gs{font-family:system-ui,-apple-system,sans-serif;font-size:13px}.gs.m{color:var(--mom)}.gs.f{color:var(--dad)}
-.gx2{color:var(--mute);margin:0 2px;font-size:12px}
-.glbl{font-size:11px;color:var(--mute);line-height:1.4}
-.gsay{font-size:13px;color:var(--mute);padding:6px 0}
-.galt{font-size:11px;color:var(--alt);text-decoration:none;padding:2px 0}
-.gst{width:1px;height:12px;background:var(--line);margin-top:2px}
+/* 祖父母の段：上向きの木（4枠＋真ん中の細い列）。┬は母側＝朱・父側＝藍、合流から下は灰 */
+section.gpar{width:100%}
+.g5{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) 16px minmax(0,1fr) minmax(0,1fr);column-gap:4px;width:100%}
+.gpn{align-items:end}
+.gpl{align-items:end;margin-bottom:2px}
+.gpl>div{text-align:center;font-size:11px;color:var(--mute);line-height:1.4}
+.gcell{text-align:center;font-family:var(--mincho);font-size:var(--gfs,13px);line-height:1.3;min-height:40px;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;min-width:0;overflow-wrap:anywhere;word-break:normal}
+.gcell .gn{color:var(--ink);text-decoration:none;padding:2px 1px}
+.gcell .gm{color:var(--mute)}
+.gcell .gi{font-size:12px;line-height:1.35}
+.nw{white-space:nowrap}
+.gx2{color:var(--mute);margin:0 1px}
+.gsay{font-size:13px;color:var(--mute);padding:6px 0;text-align:center}
+.galt{color:var(--alt);text-decoration:none;margin-left:4px}
+.tee{position:relative;height:16px;--L:calc((100% - 4px) / 4)}
+.tee.c3{--L:calc((100% - 24px) / 4)}
+.tee.tp{--L:calc((100% - 32px) / 4 + 2px);margin-top:-8px;width:100%;align-self:stretch}
+.tee i{position:absolute;display:block;top:0;height:8px;box-sizing:border-box}
+.tee .a{left:var(--L);width:calc(50% - var(--L));border-left:1.5px solid var(--mom);border-bottom:1.5px solid var(--mom)}
+.tee .b{left:50%;width:calc(50% - var(--L));border-right:1.5px solid var(--dad);border-bottom:1.5px solid var(--dad)}
+.tee .c{left:calc(50% - .75px);top:8px;border-left:1.5px solid var(--line)}
+.tee.tunk .a{border-left:1.5px dashed var(--unk);border-bottom:1.5px dashed var(--unk)}
+.tee.tunk .b{border-right:1.5px dashed var(--unk);border-bottom:1.5px dashed var(--unk)}
+.tee.gray .a,.tee.gray .b{border-color:var(--line)}
+.tee .v{left:calc(50% - .75px);height:16px;border-left:1.5px solid var(--line)}
+.tee.tsel .v{border-left:2px dotted var(--sel)}
+.row.g5{align-items:center}
+.row.g5>:nth-child(1){grid-column:1/3;justify-self:center;max-width:100%}
+.row.g5>:nth-child(2){grid-column:3;justify-self:center}
+.row.g5>:nth-child(3){grid-column:4/6;justify-self:center;max-width:100%}
+section.parents>.lbl{order:2}
+section.parents>.alt{order:3}
 /* 年の目盛り・年不明（推定の位置） */
 .tr .ax{stroke:#DDD5C6;stroke-width:1;vector-effect:non-scaling-stroke}
 .tr .axl{font-size:calc(11px * var(--ik,1));fill:var(--mute);stroke:var(--bg);stroke-width:calc(3px * var(--ik,1));paint-order:stroke}
@@ -334,8 +348,8 @@ function symHTML(sym){ return sym ? '<span class="s">' + sym + '</span>' : ""; }
 function chip(name, cls, sym, mark){
   if(isInter(name)) return interBox(name, cls, sym);
   const mk = mark ? '<small class="mago">' + mark + '</small>' : "";
-  if(isCenterable(name)) return '<a class="chip ' + (cls || "") + '" href="' + href(name) + '">' + symHTML(sym) + esc(name) + mk + '</a>';
-  return '<span class="chip ' + (cls || "") + '">' + symHTML(sym) + esc(name) + '</span>';
+  if(isCenterable(name)) return '<a class="chip ' + (cls || "") + '" href="' + href(name) + '">' + symHTML(sym) + '<span>' + gpText(name) + '</span>' + mk + '</a>';
+  return '<span class="chip ' + (cls || "") + '">' + symHTML(sym) + '<span>' + gpText(name) + '</span></span>';
 }
 // 名前のない中間：箱の中に ♀A × ♂B を小さく（箱は中心にならない）
 function interBox(name, cls, sym){
@@ -360,49 +374,67 @@ function exprLine(e, grid){
   if(e.t === "unk") lbl = '<div class="lbl">親（どちらが母かは不明）</div>';
   if(e.t === "sel") lbl = '<div class="lbl">選び出した元</div>';
   if(e.t === "names" && e.xs.length === 1) return '<div class="row"><span class="lbl">片親：</span>' + exprInner(e) + '</div>';
-  return lbl + '<div class="row' + (grid ? " g2" : "") + '">' + exprInner(e) + '</div>';
+  return lbl + '<div class="row' + (grid ? " g5" : "") + '">' + exprInner(e) + '</div>';
 }
-/* ---------- 祖父母：各親の真上に、その親の親を1世代だけ（色は♀♂の字だけ・線は灰） ---------- */
-function gpName(n){
-  if(isInter(n)){
-    const e = nodeExpr(N.get(n));
-    if(e && e.t === "pair" && e.m.t === "name" && e.f.t === "name") return '（' + gpName(e.m.name) + '<span class="gx2">×</span>' + gpName(e.f.name) + '）';
-    return "";
-  }
-  return isCenterable(n) ? '<a class="gn" href="' + href(n) + '">' + esc(n) + '</a>' : '<span class="gn gm">' + esc(n) + '</span>';
+/* ---------- 祖父母：上向きの木（各親の真上にその親の親。♀♂の字は出さず、位置と枝の色で） ---------- */
+// 数字・英字の並びと直後の「号」「系」は1かたまり（その途中で改行しない）
+function gpText(n){ return esc(n).replace(/[0-9A-Za-z０-９Ａ-Ｚａ-ｚ.\-・]+[号系]?[）)]?/g, m => '<span class="nw">' + m + '</span>'); }
+function gpLink(n){ return isCenterable(n) ? '<a class="gn" href="' + href(n) + '">' + gpText(n) + '</a>' : '<span class="gn gm">' + gpText(n) + '</span>'; }
+// 名前のない交配を1行に（かっこの前で改行しない・入れ子もそのまま）
+function gpParts(n){
+  const e = nodeExpr(N.get(n));
+  if(e && e.t === "pair") return {sep: "×", xs: [e.m, e.f]};
+  if(e && e.t === "unk") return {sep: "/", xs: e.xs};
+  return null;
 }
-function gpCell(name){
-  if(!name || isInter(name) || !isCenterable(name)) return "";
+function gpInline(n){
+  if(!isInter(n)) return gpLink(n);
+  const g = gpParts(n); if(!g) return "";
+  const xs = g.xs.map(x => gpInline(x.name));
+  return '（' + xs.slice(0, -1).map(x => x + '<span class="gx2">' + g.sep + '</span>').join("") + '<span class="nw">' + xs[xs.length - 1] + '）</span>';
+}
+// 祖父母1枠：名前、または名前のない交配なら「A／×B」の行（名前ごとに押せる）
+function gpNameCell(n){
+  if(!isInter(n)) return gpLink(n);
+  const g = gpParts(n); if(!g) return "";
+  return g.xs.map((x, k) => '<span class="gi">' + (k ? '<span class="gx2">' + g.sep + '</span>' : "") + gpInline(x.name) + '</span>').join("");
+}
+// 親1つ分の上段：{lbl, cells:[2つ] か one, line}
+function gpSide(name){
+  if(!name || isInter(name) || !isCenterable(name)) return null;
   const item = V.get(name) || N.get(name), v = V.get(name);
   const ps = (item.parents || []).filter(p => p.role !== "alt");
-  const line = (n, sym, c) => '<div class="gl">' + (sym ? '<span class="gs ' + c + '">' + sym + '</span>' : "") + gpName(n) + '</div>';
-  let h = "";
-  if(v && v.root && !ps.length) h = '<div class="gsay">在来の稲から</div>';
+  const alt = (v && v.conf && v.conf.length) || (item.parents || []).some(p => p.role === "alt");
+  let o = null;
+  if(v && v.root && !ps.length) o = {lbl: "", one: '<div class="gsay">在来の稲から</div>', line: ""};
   else {
     const e = nodeExpr(item), sys = ps.filter(p => p.role === "系");
-    if(e && e.t === "pair" && e.m.t === "name" && e.f.t === "name") h = line(e.m.name, "♀", "m") + line(e.f.name, "♂", "f");
-    else if(e && e.t === "unk") h = '<div class="glbl">どちらが母かは不明</div>' + e.xs.map(x => line(x.name)).join("");
-    else if(e && e.t === "sel") h = '<div class="glbl">選び出した元</div>' + line(e.x.name);
-    else if(sys.length) h = '<div class="glbl">元になった品種</div>' + sys.map(p => line(p.name)).join("");
-    else if(ps.length === 1) h = '<div class="glbl">片親</div>' + line(ps[0].name);
-    else if(ps.length) h = ps.map(p => line(p.name)).join("");
+    if(e && e.t === "pair") o = {lbl: "", cells: [e.m, e.f].map(x => x.t === "name" ? gpNameCell(x.name) : ""), line: "pair"};
+    else if(e && e.t === "unk" && e.xs.length === 2) o = {lbl: "どちらが母かは不明", cells: e.xs.map(x => x.t === "name" ? gpNameCell(x.name) : ""), line: "tunk"};
+    else if(e && e.t === "unk") o = {lbl: "どちらが母かは不明", one: e.xs.map(x => '<span class="gi">' + gpNameCell(x.name) + '</span>').join(""), line: "one"};
+    else if(e && e.t === "sel" && e.x.t === "name") o = {lbl: "選び出した元", one: gpNameCell(e.x.name), line: "tsel"};
+    else if(sys.length === 1) o = {lbl: "元になった品種", one: gpNameCell(sys[0].name), line: "one"};
+    else if(sys.length === 2) o = {lbl: "元になった品種", cells: sys.map(p => gpNameCell(p.name)), line: "gray"};
+    else if(ps.length === 1) o = {lbl: "片親", one: gpNameCell(ps[0].name), line: "one"};
   }
-  const alt = (v && v.conf && v.conf.length) || (item.parents || []).some(p => p.role === "alt");
-  if(alt) h += '<a class="galt" href="' + href(name) + '">別の資料もあり</a>';
-  return h;
+  if(alt){ o = o || {lbl: "", line: ""}; o.alt = '<a class="galt" href="' + href(name) + '">別の資料もあり</a>'; }
+  return o;
 }
-// 親の式から祖父母の段を作る：2列（母・父／向き不明の2つ）か1列（元・片親）。何も無ければ空
-function gpHTML(e, singles){
-  const cell = c => '<div class="gc">' + (c ? c + '<div class="gst"></div>' : "") + '</div>';
-  if(e && (e.t === "pair" || (e.t === "unk" && e.xs.length === 2))){
-    const [a, b] = e.t === "pair" ? [e.m, e.f] : e.xs;
-    const ca = a.t === "name" ? gpCell(a.name) : "", cb = b.t === "name" ? gpCell(b.name) : "";
-    if(!ca && !cb) return "";
-    return '<div class="gp2">' + cell(ca) + '<span class="x gx">' + (e.t === "pair" ? "×" : "/") + '</span>' + cell(cb) + '</div>';
+const TEE = k => k === "pair" || k === "tunk" || k === "gray" ? '<i class="a"></i><i class="b"></i><i class="c"></i>' : '<i class="v"></i>';
+// sides: 親ごとに [gpSide, 列の範囲]。列は 1–2（母）・4–5（父）・2–4（親が1つ）
+function gpHTML(sides){
+  sides = sides.filter(([o]) => o);
+  if(!sides.length) return "";
+  let lb = "", nm = "", te = "";
+  for(const [o, [c0, c1]] of sides){
+    const span = 'grid-column:' + c0 + '/' + (c1 + 1);
+    if(o.lbl || o.alt) lb += '<div style="' + span + '">' + esc(o.lbl) + (o.alt || "") + '</div>';
+    if(o.cells) o.cells.forEach((c, k) => { nm += '<div class="gcell" style="grid-column:' + (k ? c1 : c0) + '">' + c + '</div>'; });
+    else if(o.one) nm += '<div class="gcell" style="' + span + '">' + o.one + '</div>';
+    if(o.line && (o.one || (o.cells && o.cells.every(Boolean)))) te += '<div class="tee ' + o.line + (c1 - c0 === 2 ? " c3" : "") + '" style="' + span + '">' + TEE(o.line) + '</div>';
+    else if(o.line && o.cells) te += '<div class="tee gray" style="' + span + '"><i class="v" style="left:' + (o.cells[0] ? "var(--L)" : "calc(100% - var(--L))") + '"></i></div>';
   }
-  const one = e && e.t === "sel" && e.x.t === "name" ? e.x.name : (singles && singles.length === 1 ? singles[0] : null);
-  const c = one ? gpCell(one) : "";
-  return c ? '<div class="gp1">' + cell(c) + '</div>' : "";
+  return (lb ? '<div class="g5 gpl">' + lb + '</div>' : "") + '<div class="g5 gpn">' + nm + '</div>' + (te ? '<div class="g5">' + te + '</div>' : "");
 }
 function parentsHTML(item){
   const v = V.get(item.name);
@@ -412,10 +444,17 @@ function parentsHTML(item){
     h += '<div class="say">' + esc(v.root) + '</div>';
   } else {
     const e = nodeExpr(item), sys = ps.filter(p => p.role === "系");
-    gp = gpHTML(e, e ? null : (sys.length ? sys : ps).map(p => p.name));
-    if(e) h += exprLine(e, gp && gp.startsWith('<div class="gp2">'));
-    else if(sys.length) h += '<div class="lbl">元になった品種</div><div class="row">' + sys.map(p => chip(p.name, "unk")).join("") + '</div>';
-    else if(ps.length) h += '<div class="row">' + ps.map(p => chip(p.name, "")).join("") + '</div>';
+    const two = e && (e.t === "pair" || (e.t === "unk" && e.xs.length === 2));
+    const single = e ? (e.t === "sel" && e.x.t === "name" ? e.x.name : null) : (sys.length === 1 ? sys[0].name : (!sys.length && ps.length === 1 ? ps[0].name : null));
+    if(two){
+      const [a, b] = e.t === "pair" ? [e.m, e.f] : e.xs;
+      gp = gpHTML([[a.t === "name" ? gpSide(a.name) : null, [1, 2]], [b.t === "name" ? gpSide(b.name) : null, [4, 5]]]);
+    } else if(single) gp = gpHTML([[gpSide(single), [2, 4]]]);
+    const tee = two ? '<div class="tee tp ' + (e.t === "pair" ? "pair" : "tunk") + '">' + TEE("pair") + '</div>'
+      : single ? '<div class="tee tp ' + (e && e.t === "sel" ? "tsel" : "one") + '">' + TEE("one") + '</div>' : "";
+    if(e) h += exprLine(e, two) + tee;
+    else if(sys.length) h += '<div class="lbl">元になった品種</div><div class="row">' + sys.map(p => chip(p.name, "unk")).join("") + '</div>' + tee;
+    else if(ps.length) h += '<div class="row">' + ps.map(p => chip(p.name, "")).join("") + '</div>' + tee;
     else h += '<div class="say">親は分かっていない</div>';
   }
   for(const g of (v ? altGroups(v) : [])){
@@ -493,7 +532,7 @@ function cardHTML(v, st){
 let cur = null, st = {kids:false, pages:false};
 function render(){
   const v = V.get(cur), item = v || N.get(cur);
-  let h = parentsHTML(item) + '<div class="stem"></div><section class="lv center"><h2>' + esc(cur) + '</h2>';
+  let h = parentsHTML(item) + '<div class="stem"></div><section class="lv center"><h2>' + gpText(cur) + '</h2>';
   if(v){
     if(!v.inbook) h += '<div class="sub">本に載っていない品種</div>';
     if(v.aliases && v.aliases.length) h += '<div class="sub">別名 ' + esc(v.aliases.join("／")) + '</div>';
@@ -507,7 +546,43 @@ function render(){
   if(mk) mk.onclick = () => { st.kids = true; render(); };
   const mp = document.getElementById("morePages");
   if(mp) mp.onclick = () => { st.pages = true; render(); };
+  fixTees();
 }
+// ┬の脚を、それぞれの親の箱の上端・下端まで実際に届かせる（背の違う箱が並ぶ時）
+function teeParents(){
+  const sec = document.querySelector("#view section.parents"), row = sec && sec.querySelector(":scope > .row");
+  if(!row) return [];
+  const els = [...row.children].filter(e => !e.classList.contains("x") && !e.classList.contains("lbl"));
+  return row.classList.contains("g5") ? [els[0], els[1]] : [els[0]];
+}
+function fixTees(){
+  const view = document.getElementById("view");
+  if(view.hidden) return;
+  const ps = teeParents();
+  if(!ps.length || !ps[0]) return;
+  const two = ps.length === 2;
+  // 祖父母の┬：合流の縦を親の箱の上端まで
+  for(const tee of view.querySelectorAll("section.gpar .tee")){
+    const col = tee.style.gridColumn || "", p = two ? (col.startsWith("1") ? ps[0] : ps[1]) : ps[0];
+    const leg = tee.querySelector(".c") || tee.querySelector(".v");
+    if(!leg || !p) continue;
+    leg.style.height = "";
+    const gap = p.getBoundingClientRect().top - leg.getBoundingClientRect().bottom;
+    if(gap > 0.5) leg.style.height = (leg.getBoundingClientRect().height + gap) + "px";
+  }
+  // 親→中心の┬：脚を親の箱の下端まで（上へ伸ばす）
+  const tp = view.querySelector("section.parents > .tee.tp");
+  if(tp){
+    const legs = two ? [tp.querySelector(".a"), tp.querySelector(".b")] : [tp.querySelector(".v")];
+    legs.forEach((leg, k) => {
+      if(!leg || !ps[k]) return;
+      leg.style.top = ""; leg.style.height = "";
+      const gap = leg.getBoundingClientRect().top - ps[k].getBoundingClientRect().bottom;
+      if(gap > 0.5){ const h = leg.getBoundingClientRect().height; leg.style.top = (-gap) + "px"; leg.style.height = (h + gap) + "px"; }
+    });
+  }
+}
+window.addEventListener("resize", () => { if(mode === "g") fixTees(); });
 function fromHash(){
   let name = "";
   try { name = decodeURIComponent(location.hash.slice(1)); } catch(e) { name = ""; }
