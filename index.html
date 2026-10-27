@@ -103,6 +103,10 @@ nav.nav a.on{color:var(--ink)}
 .mlist{margin:16px 0 0;border-top:1px solid var(--line);padding-top:10px}
 .mlh{display:flex;align-items:baseline;gap:10px;font-size:13px;color:var(--mute);margin-bottom:4px}
 .mlh span{padding:6px 0}
+.mtabs{display:flex;margin:8px 0 0;border-bottom:1px solid var(--line)}
+.mtabs[hidden]{display:none}
+.mtabs a{flex:1;min-height:44px;display:flex;align-items:center;justify-content:center;font-size:15px;color:var(--dad);text-decoration:none;border-bottom:2px solid transparent;margin-bottom:-1px}
+.mtabs a.on{color:var(--ink);border-bottom-color:var(--ink);font-weight:600}
 .mpr{margin:16px 0 0;border-top:1px solid var(--line)}
 .mpr.mrest{margin:0;border-top:none}
 .mpr summary{padding:11px 0;font-size:13px;color:var(--dad);cursor:pointer}
@@ -611,6 +615,7 @@ function route(){
   let h = "";
   try { h = decodeURIComponent(location.hash.slice(1)); } catch(e) { h = ""; }
   const rep = s => history.replaceState(null, "", location.pathname + location.search + "#" + encodeURIComponent(s));
+  if(h === "地図/県") return showMap(null, null, "p");   // 全国・県からタブ（「県」という品種は無い）
   if(h.startsWith("地図/県/")){ const p = h.slice(5); if(p in TILES) return showMap(null, p); rep("地図"); return showMap(null); }
   if(h === "地図" || h.startsWith("地図/")){ const n = h.slice(3); if(!isCenterable(n) && h !== "地図") rep("地図"); return showMap(isCenterable(n) ? n : null); }
   if(h === "全体" || h.startsWith("全体/")){ const n = h.slice(3); if(n && !isCenterable(n)) rep("全体"); return showAll(isCenterable(n) ? n : null); }
@@ -715,7 +720,7 @@ const TILES = {"北海道":[27,0],"青森":[25,1.25],"秋田":[24,2.25],"岩手"
 const RANK = D.varieties.filter(v => v.cult && Object.keys(v.cult).length)
   .sort((a, b) => (b.cult_total - a.cult_total) || a.name.localeCompare(b.name, "ja"));
 // 地図の状態は「全国／県 mPref／品種 mSel」のどれか1つ
-let mapBuilt = false, mSel = null, mPref = null;
+let mapBuilt = false, mSel = null, mPref = null, mTab = "v";   // mTab：全国の画面のタブ（v＝品種から／p＝県から）
 // 県の検査数量（県計）。沖縄は検査なし（total が null）
 const PREFS_T = D.prefs || {};
 const PRANK = Object.keys(TILES).sort((a, b) => ((PREFS_T[b] || {}).total ?? -1) - ((PREFS_T[a] || {}).total ?? -1) || a.localeCompare(b, "ja"));
@@ -733,7 +738,7 @@ function hexPts(cx, cy, r){
 const HR = 33, HW = Math.sqrt(3) / 2 * HR, HVS = 1.5 * HR;
 function buildMap(){
   const v = document.getElementById("mapv");
-  v.innerHTML = '<div class="mhead" id="mhead"></div><div id="mamt"></div><div class="mnote" id="mnote"></div><svg id="msvg" role="group" aria-label="都道府県の地図"></svg>' +
+  v.innerHTML = '<div class="mhead" id="mhead"></div><nav class="mtabs" id="mtabs" aria-label="全国の順位"></nav><div id="mamt"></div><div class="mnote" id="mnote"></div><svg id="msvg" role="group" aria-label="都道府県の地図"></svg>' +
     '<div class="mleg" id="mleg">' + [1,2,3,4].map(t => '<svg viewBox="0 0 14 16"><polygon class="tile t' + t + '" points="' + hexPts(7, 8, 7) + '"/></svg>').join("") + '<span id="mlegt"></span></div>' +
     '<div class="mlist" id="mlist"></div>';
   const svg = document.getElementById("msvg");
@@ -748,7 +753,7 @@ function buildMap(){
   svg.setAttribute("viewBox", [x0 - 2, y0 - 2, x1 - x0 + 4, y1 - y0 + 4].map(n => n.toFixed(1)).join(" "));
   svg.innerHTML = h;
   // 六角：県の画面へ。県の画面で同じ県をもう一度押すと全国へ（履歴に積む）
-  const pick = e => { const g = e.target.closest && e.target.closest("g[data-p]"); if(g){ location.hash = !mSel && mPref === g.dataset.p ? mapHash(null) : prefHash(g.dataset.p); } };
+  const pick = e => { const g = e.target.closest && e.target.closest("g[data-p]"); if(g){ location.hash = !mSel && mPref === g.dataset.p ? mapHash("県") : prefHash(g.dataset.p); } };
   svg.addEventListener("click", pick);
   svg.addEventListener("keydown", e => { if(e.key === "Enter" || e.key === " "){ e.preventDefault(); pick(e); } });
   mapBuilt = true;
@@ -756,7 +761,7 @@ function buildMap(){
 function drawMap(){
   const v = V.get(mSel) || null, cult = v && v.cult ? v.cult : {};
   const has = Object.keys(cult).length > 0;
-  const zen = '<a class="mz" href="' + mapHash(null) + '">全国 ›</a>';
+  const zen = '<a class="mz" href="' + mapHash(mPref ? "県" : null) + '">全国 ›</a>';   // 県の親は県の一覧（県からタブ）
   const pt = mPref ? (PREFS_T[mPref] || {}) : {};
   let head, amt = "", note = "";
   if(mSel){
@@ -771,6 +776,10 @@ function drawMap(){
       (pt.outside > 0 ? '<div class="mamt">うち品種の内訳に出ない分 ' + amountText(pt.outside) + '</div>' : "");
   } else head = '<span class="mn">全国</span><span class="mb">令和7年産（速報値）の検査数量</span>';
   document.getElementById("mhead").innerHTML = head;
+  const tabs = document.getElementById("mtabs");
+  tabs.hidden = !!(mSel || mPref);
+  tabs.innerHTML = [["v", "品種から", mapHash(null)], ["p", "県から", mapHash("県")]].map(([k, t, hh]) =>
+    '<a href="' + hh + '"' + (k === mTab ? ' class="on" aria-current="page"' : "") + '>' + t + '</a>').join("");
   document.getElementById("mamt").innerHTML = amt;
   document.getElementById("mnote").textContent = note;
   const frame = mSel ? (v && v.pref) : mPref;
@@ -787,7 +796,7 @@ function drawMap(){
   }
   const row = (hash, name, rk, tt) => '<li><a class="mr" href="' + hash + '"><span class="rk">' + rk + '</span><span class="nm">' + esc(name) + '</span><span class="tt">' + tt + '</span></a></li>';
   // ベスト10（10位の同順位は全部入れる）まで見せ、11位以下は折りたたみ
-  const top10 = (items, unit) => { const vis = items.filter(x => x[2] <= 10), rest = items.filter(x => x[2] > 10);
+  const top10 = (items, unit) => { const top = x => x[2] !== "" && x[2] <= 10, vis = items.filter(top), rest = items.filter(x => !top(x));   // 順位なし（沖縄）は最後
     return '<ol>' + vis.map(x => row(...x)).join("") + '</ol>' +
       (rest.length ? '<details class="mpr mrest"><summary>11位以下（' + rest.length + unit + '）</summary><ol>' + rest.map(x => row(...x)).join("") + '</ol></details>' : ""); };
   const lh = s => '<div class="mlh"><span>' + esc(s) + '</span></div>';
@@ -807,21 +816,22 @@ function drawMap(){
         : '<div class="say">品種の内訳は資料に出ていません</div>';
     }
   } else {
-    h = lh("全国の品種の順位") + top10(RANK.map(o => [mapHash(o.name), o.name, rankIn(VVALS, o.cult_total), amountText(o.cult_total)]), "品種") +
-      '<details class="mpr"><summary>県の順位</summary><ol>' + PRANK.map(p => { const tt = (PREFS_T[p] || {}).total;
-        return row(prefHash(p), p, tt == null ? "" : prefRank(p), tt == null ? "検査なし" : amountText(tt)); }).join("") + '</ol></details>';
+    h = mTab === "p"
+      ? lh("全国の県の順位") + top10(PRANK.map(p => { const tt = (PREFS_T[p] || {}).total; return [prefHash(p), p, tt == null ? "" : prefRank(p), tt == null ? "検査なし" : amountText(tt)]; }), "県")
+      : lh("全国の品種の順位") + top10(RANK.map(o => [mapHash(o.name), o.name, rankIn(VVALS, o.cult_total), amountText(o.cult_total)]), "品種");
   }
   document.getElementById("mlist").innerHTML = h;
 }
 // name＝品種、pref＝県（どちらも無ければ全国）
-function showMap(name, pref){
+function showMap(name, pref, tab){
   show("m");
   if(!mapBuilt) buildMap();
-  const was = mSel + "|" + mPref;
+  const was = mSel + "|" + mPref + "|" + mTab;
   mSel = name || null; mPref = mSel ? null : (pref || null);
+  if(!mSel && !mPref) mTab = tab || "v";
   if(mSel) cur = mSel;
   drawMap(); navUpdate("m");
-  if(was !== mSel + "|" + mPref) window.scrollTo(0, 0);   // 画面を替えたら地図の見出しへ戻す
+  if(was !== mSel + "|" + mPref + "|" + mTab) window.scrollTo(0, 0);   // 画面を替えたら地図の見出しへ戻す
 }
 
 /* ---------- 一族・全体：線と箱を描く（座標は生成時に計算済み） ---------- */
