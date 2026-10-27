@@ -97,6 +97,7 @@ nav.nav a.on{color:var(--ink)}
 #msvg text.k0{fill:var(--mute)}
 #msvg text.w{fill:#fff}
 .mleg{display:flex;align-items:center;gap:3px;font-size:12px;color:var(--mute);margin:4px 0 0}
+.mleg[hidden]{display:none}
 .mleg svg{width:14px;height:16px}
 .mleg span{margin-left:6px}
 .mlist{margin:16px 0 0;border-top:1px solid var(--line);padding-top:10px}
@@ -776,6 +777,7 @@ function drawMap(){
   // 品種の画面だけ稲穂の黄土色、全国・県は墨（県計）
   document.getElementById("mapv").classList.toggle("ine", !!mSel);
   document.getElementById("mlegt").textContent = mSel ? mSel + "の検査数量" : "県の検査数量（全品種の合計）";
+  document.getElementById("mleg").hidden = !!mSel && !Object.keys(cult).length;   // 記録なしの品種は凡例を出さない
   for(const g of document.querySelectorAll("#msvg g[data-p]")){
     const p = g.dataset.p;
     const t = mSel ? (p in cult ? tierOf(cult[p], true) : 0) : prefTier((PREFS_T[p] || {}).total);
