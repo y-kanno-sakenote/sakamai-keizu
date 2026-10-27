@@ -70,15 +70,13 @@ nav.nav a.on{color:var(--ink)}
 .famlink a{color:var(--dad);font-size:15px}
 /* ---------- 地図 ---------- */
 #mapv{padding:16px 0 8px}
+#mamt{margin-top:2px}
 .mhead{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px}
 .mhead .mn{font-family:var(--mincho);font-size:22px;font-weight:600;letter-spacing:.04em}
 .mhead .mb{font-size:13px;color:var(--mute)}
 .mhead a{font-size:14px;color:var(--dad)}
 .mhead a.mg{margin-left:auto}
 .mhead a.mz{text-decoration:none}
-.mlh .on{color:var(--ink)}
-.mlh span.on{font-size:13px;padding:6px 0}
-.mlh button[data-k="v"],.mlh button[data-k="p"]{text-decoration:none;font-size:13px}
 .mamt{font-size:13px;color:var(--mute);margin:0 0 2px}
 .mnote{font-size:13px;color:var(--mute);margin-top:2px}
 #msvg{display:block;width:100%;height:auto;margin:8px 0 0}
@@ -93,13 +91,14 @@ nav.nav a.on{color:var(--ink)}
 #msvg text.l3{font-size:15px}
 #msvg text.k0{fill:var(--mute)}
 #msvg text.w{fill:#fff}
-#msvg text.pk{font-weight:700}
 .mleg{display:flex;align-items:center;gap:3px;font-size:12px;color:var(--mute);margin:4px 0 0}
 .mleg svg{width:14px;height:16px}
 .mleg span{margin-left:6px}
 .mlist{margin:16px 0 0;border-top:1px solid var(--line);padding-top:10px}
 .mlh{display:flex;align-items:baseline;gap:10px;font-size:13px;color:var(--mute);margin-bottom:4px}
-.mlh button{border:none;background:none;padding:6px 0;color:var(--dad);font-size:13px;text-decoration:underline;cursor:pointer}
+.mlh span{padding:6px 0}
+.mpr{margin:16px 0 0;border-top:1px solid var(--line)}
+.mpr summary{padding:11px 0;font-size:13px;color:var(--dad);cursor:pointer}
 .mlist ol{list-style:none;margin:0;padding:0}
 .mlist a.mr{display:flex;align-items:center;gap:10px;min-height:40px;padding:0 8px;color:var(--ink);text-decoration:none;border-bottom:1px solid var(--line)}
 .mlist a.mr.on{background:#EDE6D8}
@@ -601,12 +600,13 @@ function fromHash(){
   if(name !== gShown){ gShown = name; st = {kids:false, pages:false}; render(); window.scrollTo(0, 0); }
   navUpdate("g");
 }
-// # の形：#品種名（系図）／#地図/品種名／#一族/品種名／#全体/品種名
+// # の形：#品種名（系図）／#地図（全国）／#地図/品種名／#地図/県/県名／#一族/品種名／#全体/品種名
 function route(){
   let h = "";
   try { h = decodeURIComponent(location.hash.slice(1)); } catch(e) { h = ""; }
   const rep = s => history.replaceState(null, "", location.pathname + location.search + "#" + encodeURIComponent(s));
-  if(h === "地図" || h.startsWith("地図/")){ const n = h.slice(3); return showMap(isCenterable(n) ? n : null); }
+  if(h.startsWith("地図/県/")){ const p = h.slice(5); if(p in TILES) return showMap(null, p); rep("地図"); return showMap(null); }
+  if(h === "地図" || h.startsWith("地図/")){ const n = h.slice(3); if(!isCenterable(n) && h !== "地図") rep("地図"); return showMap(isCenterable(n) ? n : null); }
   if(h === "全体" || h.startsWith("全体/")){ const n = h.slice(3); if(n && !isCenterable(n)) rep("全体"); return showAll(isCenterable(n) ? n : null); }
   if(h.startsWith("一族/")){ const n = h.slice(3); if(isCenterable(n) && hasFamily(n)) return showFam(n); rep(isCenterable(n) ? n : HOME); return route(); }
   fromHash();
@@ -709,20 +709,26 @@ const TILES = {"北海道":[27,0],"青森":[25,1.25],"秋田":[24,2.25],"岩手"
 const RANK = D.varieties.filter(v => v.cult && Object.keys(v.cult).length)
   .sort((a, b) => (b.cult_total - a.cult_total) || a.name.localeCompare(b.name, "ja"));
 const RANK_MAX = 20, PREF_MAX = 12;
-let mapBuilt = false, mSel = null, mPref = null, mAll = false, mList = "v";
+// 地図の状態は「全国／県 mPref／品種 mSel」のどれか1つ
+let mapBuilt = false, mSel = null, mPref = null, mAll = false;
 // 県の検査数量（県計）。沖縄は検査なし（total が null）
 const PREFS_T = D.prefs || {};
 const PRANK = Object.keys(TILES).sort((a, b) => ((PREFS_T[b] || {}).total ?? -1) - ((PREFS_T[a] || {}).total ?? -1) || a.localeCompare(b, "ja"));
-// 同じ量の県は同じ順位（544 t が2県なら どちらも26位、次は28位）
-const prefRank = p => { const tt = (PREFS_T[p] || {}).total; return tt == null ? null : 1 + PRANK.filter(q => ((PREFS_T[q] || {}).total ?? -1) > tt).length; };
+// 同じ量は同じ順位（544 t が2つなら どちらも26位、次は28位）。品種・県・品種の県の3つとも同じ数え方
+const rankIn = (vals, x) => 1 + vals.filter(y => y > x).length;
+const PVALS = PRANK.map(p => (PREFS_T[p] || {}).total).filter(t => t != null);
+const prefRank = p => { const tt = (PREFS_T[p] || {}).total; return tt == null ? null : rankIn(PVALS, tt); };
+const VVALS = RANK.map(o => o.cult_total);
 const prefTier = t => t == null ? 0 : t < 100 ? 1 : t < 1000 ? 2 : t < 5000 ? 3 : 4;   // 全国の塗りの段（県計）
+const mapHash = s => "#" + encodeURIComponent(s ? "地図/" + s : "地図");
+const prefHash = p => mapHash("県/" + p);
 function hexPts(cx, cy, r){
   return [0,1,2,3,4,5].map(i => { const a = Math.PI / 180 * (60 * i - 90); return (cx + r * Math.cos(a)).toFixed(1) + "," + (cy + r * Math.sin(a)).toFixed(1); }).join(" ");
 }
 const HR = 33, HW = Math.sqrt(3) / 2 * HR, HVS = 1.5 * HR;
 function buildMap(){
   const v = document.getElementById("mapv");
-  v.innerHTML = '<div class="mhead" id="mhead"></div><div class="mnote" id="mnote"></div><svg id="msvg" role="group" aria-label="都道府県の地図"></svg>' +
+  v.innerHTML = '<div class="mhead" id="mhead"></div><div id="mamt"></div><div class="mnote" id="mnote"></div><svg id="msvg" role="group" aria-label="都道府県の地図"></svg>' +
     '<div class="mleg">' + [1,2,3,4].map(t => '<svg viewBox="0 0 14 16"><polygon points="' + hexPts(7, 8, 7) + '" fill="#2A2724" fill-opacity="' + [0,.15,.35,.6,.9][t] + '"/></svg>').join("") + '<span>色が濃いほど多い</span></div>' +
     '<div class="mlist" id="mlist"></div>';
   const svg = document.getElementById("msvg");
@@ -736,73 +742,80 @@ function buildMap(){
   }
   svg.setAttribute("viewBox", [x0 - 2, y0 - 2, x1 - x0 + 4, y1 - y0 + 4].map(n => n.toFixed(1)).join(" "));
   svg.innerHTML = h;
-  const pick = e => { const g = e.target.closest && e.target.closest("g[data-p]"); if(g){ mPref = mPref === g.dataset.p ? null : g.dataset.p; mAll = false; drawMap(); } };
+  // 六角：県の画面へ。県の画面で同じ県をもう一度押すと全国へ（履歴に積む）
+  const pick = e => { const g = e.target.closest && e.target.closest("g[data-p]"); if(g){ location.hash = !mSel && mPref === g.dataset.p ? mapHash(null) : prefHash(g.dataset.p); } };
   svg.addEventListener("click", pick);
   svg.addEventListener("keydown", e => { if(e.key === "Enter" || e.key === " "){ e.preventDefault(); pick(e); } });
   document.getElementById("mlist").addEventListener("click", e => {
-    const a = e.target.closest("a.mr");
-    if(a && a.dataset.p){ e.preventDefault(); mPref = mPref === a.dataset.p ? null : a.dataset.p; mAll = false; drawMap(); return; }
-    if(a){ e.preventDefault(); mapSelect(a.dataset.n); return; }
     const b = e.target.closest("button");
     if(b && b.dataset.k === "more"){ mAll = true; drawMap(); }
-    else if(b && (b.dataset.k === "v" || b.dataset.k === "p")){ mList = b.dataset.k; mAll = false; drawMap(); }
-  });
-  document.getElementById("mhead").addEventListener("click", e => {
-    const a = e.target.closest("a.mz"); if(a){ e.preventDefault(); mapSelect(null); }
   });
   mapBuilt = true;
-}
-function mapSelect(name){
-  history.replaceState(null, "", location.pathname + location.search + "#" + encodeURIComponent(name ? "地図/" + name : "地図"));
-  mSel = name; if(name) cur = name; mAll = false; drawMap(); navUpdate("m");
 }
 function drawMap(){
   const v = V.get(mSel) || null, cult = v && v.cult ? v.cult : {};
   const has = Object.keys(cult).length > 0;
-  document.getElementById("mhead").innerHTML = mSel
-    ? '<a class="mz" href="#' + encodeURIComponent("地図") + '">全国 ›</a><span class="mn">' + esc(mSel) + '</span>' +
-      (v && v.pref ? '<span class="mb">' + esc(v.pref) + '生まれ</span>' : "") + '<a class="mg" href="' + href(mSel) + '">系図 →</a>'
-    : '<span class="mn">全国</span><span class="mb">令和7年産の検査数量</span>';
-  document.getElementById("mnote").textContent = mSel && !has ? "令和7年産の記録なし" : "";
+  const zen = '<a class="mz" href="' + mapHash(null) + '">全国 ›</a>';
+  const pt = mPref ? (PREFS_T[mPref] || {}) : {};
+  let head, amt = "", note = "";
+  if(mSel){
+    head = zen + '<span class="mn">' + esc(mSel) + '</span>' +
+      (v && v.pref ? '<span class="mb">' + esc(v.pref) + '生まれ</span>' : "") + '<a class="mg" href="' + href(mSel) + '">系図 →</a>';
+    if(has) amt = '<div class="mamt">検査数量 ' + amountText(v.cult_total) + '・全国' + rankIn(VVALS, v.cult_total) + '位</div>';
+    else note = "令和7年産の記録なし";
+  } else if(mPref){
+    head = zen + '<span class="mn">' + esc(mPref) + '</span>';
+    if(pt.total == null) amt = '<div class="mamt">令和7年産の検査なし</div>';
+    else amt = '<div class="mamt">検査数量 ' + amountText(pt.total) + '・全国' + prefRank(mPref) + '位</div>' +
+      (pt.outside > 0 ? '<div class="mamt">うち品種の内訳に出ない分 ' + amountText(pt.outside) + '</div>' : "");
+  } else head = '<span class="mn">全国</span><span class="mb">令和7年産の検査数量</span>';
+  document.getElementById("mhead").innerHTML = head;
+  document.getElementById("mamt").innerHTML = amt;
+  document.getElementById("mnote").textContent = note;
+  const frame = mSel ? (v && v.pref) : mPref;
   for(const g of document.querySelectorAll("#msvg g[data-p]")){
     const p = g.dataset.p;
     const t = mSel ? (p in cult ? tierOf(cult[p], true) : 0) : prefTier((PREFS_T[p] || {}).total);
     g.querySelector(".tile").setAttribute("class", "tile t" + t);
-    g.querySelector(".born").setAttribute("display", v && v.pref === p ? "inline" : "none");
-    g.querySelector("text").setAttribute("class", (t === 0 ? "k0" : t >= 3 ? "w" : "") + (p.length > 2 ? " l3" : "") + (p === mPref ? " pk" : ""));
+    g.querySelector(".born").setAttribute("display", frame === p ? "inline" : "none");
+    g.querySelector("text").setAttribute("class", (t === 0 ? "k0" : t >= 3 ? "w" : "") + (p.length > 2 ? " l3" : ""));
   }
-  const row = (o, rk, tt) => '<li><a class="mr' + (o.name === mSel ? " on" : "") + '" data-n="' + esc(o.name) + '" href="#' + esc(encodeURIComponent("地図/" + o.name)) + '">' +
-    (rk ? '<span class="rk">' + rk + '</span>' : "") + '<span class="nm">' + esc(o.name) + '</span>' + (tt ? '<span class="tt">' + tt + '</span>' : "") + '</a></li>';
+  const row = (hash, name, rk, tt) => '<li><a class="mr" href="' + hash + '"><span class="rk">' + rk + '</span><span class="nm">' + esc(name) + '</span><span class="tt">' + tt + '</span></a></li>';
   const more = (n, unit) => !mAll && n > 0 ? '<button class="more" type="button" data-k="more">… ほか' + n + unit + '</button>' : "";
-  let h;
-  if(mPref){
-    const ls = D.varieties.filter(o => o.cult && mPref in o.cult).sort((a, b) => (b.cult[mPref] - a.cult[mPref]) || a.name.localeCompare(b.name, "ja"));
-    const vis = mAll ? ls : ls.slice(0, PREF_MAX);
-    const pt = PREFS_T[mPref] || {};
-    const amt = pt.total == null ? '<div class="mamt">令和7年産の検査なし</div>'
-      : '<div class="mamt">検査数量 ' + amountText(pt.total) + '・全国' + prefRank(mPref) + '位</div>' +
-        (pt.outside ? '<div class="mamt">うち品種の内訳に出ない分 ' + amountText(pt.outside) + '</div>' : "");
-    h = '<div class="mlh"><span>' + esc(mPref) + 'で作っている品種</span></div>' + amt +
-      (ls.length ? '<ol>' + vis.map(o => row(o)).join("") + '</ol>' : pt.total == null ? "" : '<div class="say">品種の内訳は資料に出ていません</div>') +
-      more(ls.length - vis.length, "品種");
-  } else if(!mSel && mList === "p"){
-    const vis = mAll ? PRANK : PRANK.slice(0, RANK_MAX);
-    h = '<div class="mlh"><button type="button" data-k="v">品種の順位</button><span class="on">県の順位</span></div><ol>' +
-      vis.map((p, i) => { const tt = (PREFS_T[p] || {}).total; return '<li><a class="mr" data-p="' + esc(p) + '" href="#' + encodeURIComponent("地図") + '"><span class="rk">' + (tt == null ? "" : prefRank(p)) + '</span><span class="nm">' + esc(p) + '</span><span class="tt">' + (tt == null ? "検査なし" : amountText(tt)) + '</span></a></li>'; }).join("") +
-      '</ol>' + more(PRANK.length - vis.length, "県");
+  const lh = s => '<div class="mlh"><span>' + esc(s) + '</span></div>';
+  let h = "";
+  if(mSel){
+    if(has){
+      const ps = Object.keys(cult).sort((a, b) => (cult[b] - cult[a]) || a.localeCompare(b, "ja"));
+      const vals = ps.map(p => cult[p]), vis = mAll ? ps : ps.slice(0, PREF_MAX);
+      h = lh(mSel + "の県の順位") + '<ol>' + vis.map(p => row(prefHash(p), p, rankIn(vals, cult[p]), amountText(cult[p]))).join("") + '</ol>' + more(ps.length - vis.length, "県");
+    }
+  } else if(mPref){
+    if(pt.total != null){
+      const ls = D.varieties.filter(o => o.cult && mPref in o.cult).sort((a, b) => (b.cult[mPref] - a.cult[mPref]) || a.name.localeCompare(b.name, "ja"));
+      const vals = ls.map(o => o.cult[mPref]), vis = ls;   // 県の画面は全品種を出す
+      h = ls.length
+        ? lh(mPref + "の品種の順位") + '<ol>' + vis.map(o => row(mapHash(o.name), o.name, rankIn(vals, o.cult[mPref]), amountText(o.cult[mPref]))).join("") + '</ol>'
+        : '<div class="say">品種の内訳は資料に出ていません</div>';
+    }
   } else {
     const vis = mAll ? RANK : RANK.slice(0, RANK_MAX);
-    h = (mSel ? '<div class="mlh"><span>全国でよく作られている品種</span></div>' : '<div class="mlh"><span class="on">品種の順位</span><button type="button" data-k="p">県の順位</button></div>') +
-      '<ol>' + vis.map((o, i) => row(o, i + 1, amountText(o.cult_total))).join("") + '</ol>' + more(RANK.length - vis.length, "品種");
+    h = lh("全国の品種の順位") + '<ol>' + vis.map(o => row(mapHash(o.name), o.name, rankIn(VVALS, o.cult_total), amountText(o.cult_total))).join("") + '</ol>' + more(RANK.length - vis.length, "品種") +
+      '<details class="mpr"><summary>県の順位</summary><ol>' + PRANK.map(p => { const tt = (PREFS_T[p] || {}).total;
+        return row(prefHash(p), p, tt == null ? "" : prefRank(p), tt == null ? "検査なし" : amountText(tt)); }).join("") + '</ol></details>';
   }
   document.getElementById("mlist").innerHTML = h;
 }
-function showMap(name){
+// name＝品種、pref＝県（どちらも無ければ全国）
+function showMap(name, pref){
   show("m");
   if(!mapBuilt) buildMap();
-  if(!name && location.hash !== "#" + encodeURIComponent("地図")) history.replaceState(null, "", location.pathname + location.search + "#" + encodeURIComponent("地図"));
-  mSel = name || null; if(name) cur = name; mAll = false; mList = "v";
+  const was = mSel + "|" + mPref;
+  mSel = name || null; mPref = mSel ? null : (pref || null);
+  if(mSel) cur = mSel;
+  mAll = false;
   drawMap(); navUpdate("m");
+  if(was !== mSel + "|" + mPref) window.scrollTo(0, 0);   // 画面を替えたら地図の見出しへ戻す
 }
 
 /* ---------- 一族・全体：線と箱を描く（座標は生成時に計算済み） ---------- */
