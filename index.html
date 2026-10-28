@@ -58,6 +58,8 @@ span.chip{display:inline-flex;align-items:center;min-height:40px;padding:4px 12p
 .linkbtn{border:none;background:none;padding:0 0 0 4px;color:var(--dad);font-size:13px;text-decoration:underline;cursor:pointer}
 footer{margin:28px 0 32px;padding-top:12px;border-top:1px solid var(--line);font-size:12px;color:var(--mute);line-height:1.7}
 footer p{margin:0 0 6px}
+footer summary{padding:11px 0;font-size:13px;color:var(--dad);cursor:pointer}   /* 地図の折りたたみと同じ見た目 */
+footer details[open] summary{margin-bottom:4px}
 footer a{color:var(--mute);word-break:break-all}
 .mago{margin-left:6px;font-family:system-ui,-apple-system,sans-serif;font-size:11px;color:var(--mute);border:1px solid var(--line);border-radius:3px;padding:0 3px;line-height:1.4}
 /* ---------- 見出しの行き来 ---------- */
@@ -235,12 +237,13 @@ section.parents>.alt{order:3}
 </div>
 <section id="treev" hidden></section>
 <div class="wrap">
-  <footer>
+  <footer><details>
+    <summary>出典</summary>
     <p>主な出典：副島顕子『酒米ハンドブック 改訂版』文一総合出版、2017（系譜図・本文は転載していません）</p>
     <p>数量：「米穀の農産物検査結果」4 銘柄別検査数量（3）醸造用玄米（令和7年産速報値・令和8年3月31日現在）（農林水産省）を加工して作成 <a href="https://www.maff.go.jp/j/seisan/syoryu/kensa/kome/" rel="noopener">https://www.maff.go.jp/j/seisan/syoryu/kensa/kome/</a>（2026年10月27日利用）（県の合計は同資料 p.3「2 種類別検査数量」）</p>
     <p>親の情報は農研機構イネ品種データベースと各県の試験場の報告などで照合しました</p>
     <p>育成年の一部は農研機構イネ品種データベースの命名年で補いました</p>
-  </footer>
+  </details></footer>
 </div>
 <script>
 "use strict";
