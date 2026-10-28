@@ -102,7 +102,8 @@ nav.nav a.on{color:var(--ink)}
 .mlist{margin:16px 0 0;border-top:1px solid var(--line);padding-top:10px}
 .mlh{display:flex;align-items:baseline;gap:10px;font-size:13px;color:var(--mute);margin-bottom:4px}
 .mlh span{padding:6px 0}
-.mtabs{display:flex;margin:8px 0 0;border-bottom:1px solid var(--line)}
+.mtabs{display:flex;margin:16px 0 0;border-bottom:1px solid var(--line)}
+.mtabs:not([hidden])+.mlist{margin-top:0;border-top:0}
 .mtabs[hidden]{display:none}
 .mtabs a{flex:1;min-height:44px;display:flex;align-items:center;justify-content:center;font-size:15px;color:var(--dad);text-decoration:none;border-bottom:2px solid transparent;margin-bottom:-1px}
 .mtabs a.on{color:var(--ink);border-bottom-color:var(--ink);font-weight:600}
@@ -736,9 +737,9 @@ function hexPts(cx, cy, r){
 const HR = 33, HW = Math.sqrt(3) / 2 * HR, HVS = 1.5 * HR;
 function buildMap(){
   const v = document.getElementById("mapv");
-  v.innerHTML = '<div class="mhead" id="mhead"></div><nav class="mtabs" id="mtabs" aria-label="全国の順位"></nav><div id="mamt"></div><div class="mnote" id="mnote"></div><svg id="msvg" role="group" aria-label="都道府県の地図"></svg>' +
+  v.innerHTML = '<div class="mhead" id="mhead"></div><div id="mamt"></div><div class="mnote" id="mnote"></div><svg id="msvg" role="group" aria-label="都道府県の地図"></svg>' +
     '<div class="mleg" id="mleg">' + [1,2,3,4].map(t => '<svg viewBox="0 0 14 16"><polygon class="tile t' + t + '" points="' + hexPts(7, 8, 7) + '"/></svg>').join("") + '<span id="mlegt"></span></div>' +
-    '<div class="mlist" id="mlist"></div>';
+    '<nav class="mtabs" id="mtabs" aria-label="全国の順位"></nav><div class="mlist" id="mlist"></div>';
   const svg = document.getElementById("msvg");
   let h = "", x0 = 1e9, x1 = -1e9, y0 = 1e9, y1 = -1e9;
   for(const [p, [q, r]] of Object.entries(TILES)){
