@@ -55,7 +55,6 @@ span.chip{display:inline-flex;align-items:center;min-height:40px;padding:4px 12p
 .card dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:10px 14px}
 .card dt{font-size:13px;color:var(--mute);white-space:nowrap;padding-top:1px}
 .card dd{margin:0}
-.card .pg{font-size:13px;color:var(--mute)}
 .linkbtn{border:none;background:none;padding:0 0 0 4px;color:var(--dad);font-size:13px;text-decoration:underline;cursor:pointer}
 footer{margin:28px 0 32px;padding-top:12px;border-top:1px solid var(--line);font-size:12px;color:var(--mute);line-height:1.7}
 footer p{margin:0 0 6px}
@@ -547,10 +546,19 @@ function cardHTML(v, st){
   }
   rows.push(["作っている県", c]);
   if(v.cat) rows.push(["区分", esc(v.cat)]);
-  if(v.kancho) rows.push(["丈", esc(v.kancho[0]) + '<div class="pg">' + esc(v.kancho[1].split("・").map(x => /^p\./.test(x) ? "酒米ハンドブック " + x : x.replace(/^醸協 /, "日本醸造協会誌 ")).join("・")) + '</div>']);
-  if(v.tkw) rows.push(["千粒重", esc(v.tkw[0]) + ' g' + (new RegExp("p\\." + v.tkw[1] + "(?!\\d)").test((v.src || [])[0] || "") ? "" : '<span class="pg">（p.' + v.tkw[1] + '）</span>')]);   // 出典の頁と同じなら頁は重ねない
+  const s0 = (v.src || [])[0] || "", inS0 = pg => new RegExp("p\\." + pg + "(?!\\d)").test(s0);   // 出典の頁と同じなら頁は重ねない
+  const ex = [];
+  if(v.kancho){
+    rows.push(["丈", esc(v.kancho[0])]);
+    const k = v.kancho[1].split("・").filter(x => !(/^p\./.test(x) && inS0(x.slice(2)))).map(x => /^p\./.test(x) ? "酒米ハンドブック " + x : x.replace(/^醸協 /, "日本醸造協会誌 "));
+    if(k.length) ex.push("丈：" + k.join("・"));
+  }
+  if(v.tkw){
+    rows.push(["千粒重", esc(v.tkw[0]) + " g"]);
+    if(!inS0(v.tkw[1])) ex.push("千粒重：酒米ハンドブック p." + v.tkw[1]);
+  }
   if(v.year_note) rows.push(["年について", esc(v.year_note)]);
-  rows.push(["出典", '<div class="src">' + sourceHTML(v, st.pages) + '</div>']);
+  rows.push(["出典", '<div class="src">' + sourceHTML(v, st.pages) + ex.map(x => '<div>' + esc(x) + '</div>').join("") + '</div>']);
   return '<section class="card"><dl>' + rows.map(r => '<dt>' + r[0] + '</dt><dd>' + r[1] + '</dd>').join("") + '</dl></section>';
 }
 
