@@ -521,7 +521,7 @@ function sourceHTML(v, showPages){
   const ls = v.src || [];
   let h = "";
   ls.forEach((x, i) => {
-    h += '<div>' + esc(x);
+    h += '<div>' + esc(x.replace(/^出典：/, ""));   // 見出しが「出典」なので頭書きは重ねない
     if(i === 0 && v.pages) h += showPages ? '<div>' + v.pages.map(p => "p." + p).join("・") + '</div>' : ' <button class="linkbtn" id="morePages" type="button">ほか</button>';
     h += '</div>';
   });
