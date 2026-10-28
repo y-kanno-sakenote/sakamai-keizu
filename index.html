@@ -703,7 +703,7 @@ function navUpdate(active){
   const c = cur || HOME;
   for(const a of document.querySelectorAll("#nav a")){
     const k = a.dataset.v;
-    a.setAttribute("href", k === "g" ? href(c) : k === "m" ? "#" + encodeURIComponent("地図/" + c) : "#" + encodeURIComponent("全体"));   // 全体は選択なしで開く
+    a.setAttribute("href", k === "g" ? href(c) : "#" + encodeURIComponent(k === "m" ? "地図" : "全体"));   // 地図は全国、全体は選択なしで開く
     a.classList.toggle("on", k === active);
     if(k === active) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current");
   }
