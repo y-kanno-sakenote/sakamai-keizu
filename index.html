@@ -992,7 +992,8 @@ function sizeBox(){
   const top = box.getBoundingClientRect().top + window.scrollY;
   box.style.height = Math.max(320, window.innerHeight - top - cap.offsetHeight - 14) + "px";
 }
-const LEGEND = '<span class="m">朱</span>＝母　<span class="f">藍</span>＝父　<span class="u">白抜き</span>＝年不明（位置は推定）<br><span class="u">灰破線</span>＝母か父か不明　<span class="s2">緑点線</span>＝選び出した元　<span class="a">柿点線</span>＝別の資料';
+const LEGEND = '<span class="m">朱</span>＝母　<span class="f">藍</span>＝父';   // 全体は眺めが主役なので色の決まりだけ。線の詳しい意味は系図の画面で
+const LEGEND_F = LEGEND + '　<span class="u">点線・破線</span>＝くわしくは系図で';
 function legendTint(){
   return LAY.tint ? '<br>箱の地の色＝育成した地方' + LAY.regions.map((r, k) => '<i class="r' + k + '"></i>' + esc(r)).join("") : "";
 }
@@ -1000,7 +1001,7 @@ function drawTree(key, pos, edges, onIdx, head, cap){
   treeShell();
   show("t");
   document.getElementById("thead").innerHTML = head;
-  document.getElementById("tleg").innerHTML = LEGEND + legendTint();
+  document.getElementById("tleg").innerHTML = key === "W" ? LEGEND : LEGEND_F + legendTint();
   document.getElementById("tcap").textContent = cap;
   sizeBox();
   const svg = document.getElementById("tsvg");
