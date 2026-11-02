@@ -527,10 +527,11 @@ function bornHTML(v){
 }
 function sourceHTML(v, showPages){
   const ls = v.src || [];
+  const more = (v.pages || []).filter(p => !new RegExp("p\\." + p + "(?!\\d)").test(ls[0] || ""));   // 出典の頁と同じ頁は「ほか」に重ねない
   let h = "";
   ls.forEach((x, i) => {
     h += '<div>' + esc(x.replace(/^出典：/, ""));   // 見出しが「出典」なので頭書きは重ねない
-    if(i === 0 && v.pages) h += showPages ? '<div>' + v.pages.map(p => "p." + p).join("・") + '</div>' : ' <button class="linkbtn" id="morePages" type="button">ほか</button>';
+    if(i === 0 && more.length) h += showPages ? '<div>' + more.map(p => "p." + p).join("・") + '</div>' : ' <button class="linkbtn" id="morePages" type="button">ほか</button>';
     h += '</div>';
   });
   return h;
@@ -541,7 +542,7 @@ function cardHTML(v, st){
   let c;
   if(!cult.length) c = "令和7年産の記録なし";
   else {
-    c = esc(cult.slice(0, 5).map(x => x[0]).join("・")) + (cult.length > 5 ? "…ほか" + (cult.length - 5) + "県" : "");
+    c = '<a href="' + mapHash(v.name) + '">' + esc(cult.slice(0, 5).map(x => x[0]).join("・")) + (cult.length > 5 ? "…ほか" + (cult.length - 5) + "県" : "") + ' →</a>';
     c += '<div>全国 ' + (v.cult_total >= 1 ? v.cult_total.toLocaleString("ja-JP") + " t" : "1 t未満") + '（令和7年産速報値）</div>';
   }
   rows.push(["作っている県", c]);
@@ -926,7 +927,7 @@ function PanZoom(box, svg){
     clearTimeout(tmr); tmr = setTimeout(apply, 150);
   };
   const size = () => [box.clientWidth, box.clientHeight];
-  s.fit = cap => { const [W, H] = size(), b = s.bb, p = s.pad || 0, pt = 20; s.k = Math.min(cap || 4, Math.min((W - 2 * p) / b.w, (H - pt) / b.h) * 0.94); s.x = (W - b.w * s.k) / 2 - b.x * s.k; s.y = pt + (H - pt - b.h * s.k) / 2 - b.y * s.k; apply(); };
+  s.fit = (cap, pb) => { const [W, H0] = size(), H = H0 - (pb || 0), b = s.bb, p = s.pad || 0, pt = 20; s.k = Math.min(cap || 4, Math.min((W - 2 * p) / b.w, (H - pt) / b.h) * 0.94); s.x = (W - b.w * s.k) / 2 - b.x * s.k; s.y = pt + (H - pt - b.h * s.k) / 2 - b.y * s.k; apply(); };   // pb＝下のボタンの分
   s.fitK = () => { const [W, H] = size(), b = s.bb; return Math.min(W / b.w, H / b.h) * 0.94; };
   s.focus = (cx, cy, k) => { const [W, H] = size(); s.k = k; s.x = W / 2 - cx * k; s.y = H / 2 - cy * k; apply(); };
   const zoomAt = (px, py, f) => { const k = Math.min(4, Math.max(0.05, s.k * f)); f = k / s.k; s.x = px - (px - s.x) * f; s.y = py - (py - s.y) * f; s.k = k; live(); };
@@ -1042,7 +1043,9 @@ function showAll(name){
 function declutter(){
   const svg = document.getElementById("tsvg"), pz = tree.pz;
   let last = -1e9;
-  for(const t of svg.querySelectorAll("text.axl")){
+  for(const t of svg.querySelectorAll("text.axl")){   // 拡大して上が切れても、年は枠の上端に出す
+    if(!t.dataset.y) t.dataset.y = t.getAttribute("y");
+    t.setAttribute("y", Math.max(+t.dataset.y, (14 - pz.y) / pz.k).toFixed(1));
     const sx = pz.x + (+t.getAttribute("x")) * pz.k, ok = sx - last >= 38;
     t.style.display = ok ? "" : "none"; if(ok) last = sx;
   }
@@ -1090,6 +1093,11 @@ function wSelect(i, quiet){
   go.innerHTML = '<span>' + esc(n) + '</span>　系図へ →';
   go.setAttribute("href", href(n));
   go.hidden = !isCenterable(n);
+  if(!quiet){   // 親子が画面に入るところまで寄せる（寄りすぎない）
+    let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9;
+    for(const j of [i, ...anc, ...des]){ const q = WPOS.get(j); if(!q) continue; const [w, h] = LAY.size[j]; x0 = Math.min(x0, q[0]); y0 = Math.min(y0, q[1]); x1 = Math.max(x1, q[0] + w); y1 = Math.max(y1, q[1] + h); }
+    const pz = tree.pz, keep = pz.bb; pz.bb = {x: x0, y: y0, w: x1 - x0, h: y1 - y0}; pz.fit(Math.max(pz.k, 1), 56); pz.bb = keep;
+  }
   declutter();
   navUpdate("t");
 }
