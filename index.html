@@ -394,7 +394,7 @@ function exprInner(e){
 function exprLine(e, grid){
   let lbl = "";
   if(e.t === "unk") lbl = '<div class="lbl">親（どちらが母かは不明）</div>';
-  if(e.t === "sel") lbl = '<div class="lbl">選び出した元</div>';
+  if(e.t === "sel") lbl = '<div class="lbl">選抜</div>';
   if(e.t === "names" && e.xs.length === 1) return '<div class="row"><span class="lbl">片親：</span>' + exprInner(e) + '</div>';
   return lbl + '<div class="row' + (grid ? " g5" : "") + '">' + exprInner(e) + '</div>';
 }
@@ -434,7 +434,7 @@ function gpSide(name){
     if(e && e.t === "pair") o = {lbl: "", cells: [e.m, e.f].map(x => x.t === "name" ? gpNameCell(x.name) : ""), line: "pair"};
     else if(e && e.t === "unk" && e.xs.length === 2) o = {lbl: "どちらが母かは不明", cells: e.xs.map(x => x.t === "name" ? gpNameCell(x.name) : ""), line: "tunk"};
     else if(e && e.t === "unk") o = {lbl: "どちらが母かは不明", one: e.xs.map(x => '<span class="gi">' + gpNameCell(x.name) + '</span>').join(""), line: "one"};
-    else if(e && e.t === "sel" && e.x.t === "name") o = {lbl: "選び出した元", one: gpNameCell(e.x.name), line: "tsel"};
+    else if(e && e.t === "sel" && e.x.t === "name") o = {lbl: "選抜", one: gpNameCell(e.x.name), line: "tsel"};
     else if(sys.length === 1) o = {lbl: "元になった品種", one: gpNameCell(sys[0].name), line: "one"};
     else if(sys.length === 2) o = {lbl: "元になった品種", cells: sys.map(p => gpNameCell(p.name)), line: "gray"};
     else if(ps.length === 1) o = {lbl: "片親", one: gpNameCell(ps[0].name), line: "one"};
@@ -994,7 +994,7 @@ function sizeBox(){
   box.style.height = Math.max(320, window.innerHeight - top - cap.offsetHeight - 14) + "px";
 }
 const nw = x => '<span style="white-space:nowrap">' + x + '</span>';
-const LEGEND = '線：' + [nw('<span class="m">朱</span>＝母'), nw('<span class="f">藍</span>＝父'), nw('<span class="u">灰</span>＝母か父か不明'), nw('<span class="s2">緑</span>＝選び出した元'), nw('<span class="a">紫</span>＝別の資料')].join("　");
+const LEGEND = '線：' + [nw('<span class="m">朱</span>＝母'), nw('<span class="f">藍</span>＝父'), nw('<span class="u">灰</span>＝母か父か不明'), nw('<span class="s2">緑</span>＝選抜'), nw('<span class="a">紫</span>＝別の資料')].join("　");
 function legendTint(){
   return LAY.tint ? '<br>箱：育成した地方' + LAY.regions.map((r, k) => nw('<i class="r' + k + '"></i>' + esc(r))).join("") + nw('<i style="background:#E8E2D6"></i>記録なし') +
     '<br>枠：' + nw('実線＝年が分かる') + '　' + nw('破線＝年が分からない') : "";
