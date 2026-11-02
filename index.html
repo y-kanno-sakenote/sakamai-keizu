@@ -994,7 +994,7 @@ function sizeBox(){
   box.style.height = Math.max(320, window.innerHeight - top - cap.offsetHeight - 14) + "px";
 }
 const nw = x => '<span style="white-space:nowrap">' + x + '</span>';
-const LEGEND = '線：' + [nw('<span class="m">朱</span>＝母'), nw('<span class="f">藍</span>＝父'), nw('<span class="u">灰</span>＝母か父か不明'), nw('<span class="s2">緑</span>＝選抜'), nw('<span class="a">紫</span>＝別の資料')].join("　");
+const LEGEND = '線：' + [nw('<span class="m">朱</span>＝母'), nw('<span class="f">藍</span>＝父'), nw('<span class="u">灰</span>＝母父不明'), nw('<span class="s2">緑</span>＝選抜'), nw('<span class="a">紫</span>＝別の資料')].join("　");
 function legendTint(){
   return LAY.tint ? '<br>箱：育成した地方' + LAY.regions.map((r, k) => nw('<i class="r' + k + '"></i>' + esc(r))).join("") + nw('<i style="background:#E8E2D6"></i>記録なし') +
     '<br>枠：' + nw('実線＝年が分かる') + '　' + nw('破線＝年が分からない') : "";
