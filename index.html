@@ -992,16 +992,15 @@ function sizeBox(){
   const top = box.getBoundingClientRect().top + window.scrollY;
   box.style.height = Math.max(320, window.innerHeight - top - cap.offsetHeight - 14) + "px";
 }
-const LEGEND = '<span class="m">朱</span>＝母　<span class="f">藍</span>＝父';   // 全体は眺めが主役なので色の決まりだけ。線の詳しい意味は系図の画面で
-const LEGEND_F = LEGEND + '　<span class="u">点線・破線</span>＝くわしくは系図で';
+const LEGEND = '<span class="m">朱</span>＝母　<span class="f">藍</span>＝父　<span class="u">点線・破線</span>＝くわしくは系図で';   // 線の詳しい意味は系図の画面で
 function legendTint(){
-  return LAY.tint ? '<br>箱の地の色＝育成した地方' + LAY.regions.map((r, k) => '<i class="r' + k + '"></i>' + esc(r)).join("") : "";
+  return LAY.tint ? '<br>箱の地の色＝育成した地方' + LAY.regions.map((r, k) => '<span style="white-space:nowrap"><i class="r' + k + '"></i>' + esc(r) + '</span>').join("") : "";
 }
 function drawTree(key, pos, edges, onIdx, head, cap){
   treeShell();
   show("t");
   document.getElementById("thead").innerHTML = head;
-  document.getElementById("tleg").innerHTML = key === "W" ? LEGEND : LEGEND_F + legendTint();
+  document.getElementById("tleg").innerHTML = LEGEND + legendTint();
   document.getElementById("tcap").textContent = cap;
   sizeBox();
   const svg = document.getElementById("tsvg");
