@@ -205,21 +205,22 @@ section.parents>.alt{order:3}
 .tr .ax{stroke:#DDD5C6;stroke-width:1;vector-effect:non-scaling-stroke}
 .tr .axl{font-size:calc(11px * var(--ik,1));fill:var(--mute);stroke:var(--bg);stroke-width:calc(3px * var(--ik,1));paint-order:stroke}
 .tr .pt,.tr circle.dot{stroke:var(--mute);stroke-width:0}
-.tr circle.dot{transform-box:fill-box;transform-origin:center;transform:scale(var(--ik,1));fill:var(--bg);stroke-width:1.2}
+.tr circle.dot{transform-box:fill-box;transform-origin:center;transform:scale(var(--ik,1));fill:var(--line);stroke-width:0}
 .tr:not(.z1) circle.dot{transform:none}
-.tr g.n.es rect{stroke-dasharray:3 2}
-.tr g.n.t0.es rect{stroke:#B9B0A0;stroke-width:1}
 .tr.wh.zb g.n.hid > text{display:none}
 .tr.wh.zb g.n.hid > .pt{display:inline}
 @media (max-width:600px){ .tr.wh.zb g.n.t3 text{font-size:calc(10.5px * var(--ik,1))} .tr.wh.zb g.n.t4 text{font-size:calc(13px * var(--ik,1))} }
 /* 地方の色分け版：縮めた時の点も地方の色に */
 .tr g.n.r0 .pt{fill:#7FA3BE;stroke:#7FA3BE}.tr g.n.r1 .pt{fill:#8DAE78;stroke:#8DAE78}.tr g.n.r2 .pt{fill:#C2A06A;stroke:#C2A06A}.tr g.n.r3 .pt{fill:#A08BBE;stroke:#A08BBE}
 .tr g.n.r4 .pt{fill:#C98872;stroke:#C98872}.tr g.n.r5 .pt{fill:#6FAE9E;stroke:#6FAE9E}.tr g.n.r6 .pt{fill:#C4AE5A;stroke:#C4AE5A}.tr g.n.r7 .pt{fill:#B87E9C;stroke:#B87E9C}
-.tr g.n.es .pt{fill:var(--bg);stroke-width:1.3}
 .tbox .go span{font-family:var(--mincho);font-size:15px}
 .tr:not(.wh).z1 g.n.on .pt{display:none!important}
 .tr g.n.r0 rect{fill:#D6E4EE}.tr g.n.r1 rect{fill:#DCE8D3}.tr g.n.r2 rect{fill:#EDE0C8}.tr g.n.r3 rect{fill:#E2D9EC}
 .tr g.n.r4 rect{fill:#F2D9D0}.tr g.n.r5 rect{fill:#D3E8E2}.tr g.n.r6 rect{fill:#F0E6C0}.tr g.n.r7 rect{fill:#EBD3DF}
+.tr g.n.rn rect{fill:#E8E2D6}.tr g.n.rn .pt{fill:#A39C90;stroke:#A39C90}
+/* 塗り＝地方（記録なしは灰）、枠＝年（分かるは実線・分からないは破線） */
+.tr g.n rect,.tr g.n.t0 rect{stroke:var(--ink);stroke-width:1}
+.tr g.n.es rect{stroke-dasharray:3 2}
 .leg i.r0{background:#D6E4EE}.leg i.r1{background:#DCE8D3}.leg i.r2{background:#EDE0C8}.leg i.r3{background:#E2D9EC}
 .leg i.r4{background:#F2D9D0}.leg i.r5{background:#D3E8E2}.leg i.r6{background:#F0E6C0}.leg i.r7{background:#EBD3DF}
 .tr g.n.on rect{fill:var(--ink);stroke:var(--ink)}
@@ -896,7 +897,7 @@ function treeSVG(pos, edges, onIdx){
   for(const [i, [x, y]] of pos){
     const [w, h, t] = LAY.size[i], name = NAMES[i];
  if(t < 0){ nh += '<circle class="dot" cx="' + (x + w / 2) + '" cy="' + (y + h / 2) + '" r="3"/>'; continue; }
-    const rg = LAY.tint && LAY.tint[i] >= 0 ? " r" + LAY.tint[i] : "";
+    const rg = !LAY.tint ? "" : LAY.tint[i] >= 0 ? " r" + LAY.tint[i] : " rn";
     nh += '<g class="n t' + t + rg + (ESTS.has(i) ? " es" : "") + (i === onIdx ? " on" : "") + '" data-i="' + i + '" transform="translate(' + x + "," + y + ')">' +
       '<title>' + esc(nodeTitle(name)) + '</title><rect width="' + w + '" height="' + h + '" rx="3"/>' +
       '<text x="' + (w / 2) + '" y="' + (h / 2) + '">' + esc(name) + '</text><circle class="pt" cx="' + (w / 2) + '" cy="' + (h / 2) + '" r="' + [1.6, 2.2, 3, 3.5, 4][t] + '"/></g>';
@@ -994,7 +995,7 @@ function sizeBox(){
 }
 const LEGEND = '<span class="m">朱</span>＝母　<span class="f">藍</span>＝父　<span class="u">点線・破線</span>＝くわしくは系図で';   // 線の詳しい意味は系図の画面で
 function legendTint(){
-  return LAY.tint ? '<br>箱の地の色＝育成した地方' + LAY.regions.map((r, k) => '<span style="white-space:nowrap"><i class="r' + k + '"></i>' + esc(r) + '</span>').join("") + '<span style="white-space:nowrap"><i style="background:var(--bg)"></i>無地＝育成地の記録なし</span>' : "";
+  return LAY.tint ? '<br>箱の地の色＝育成した地方' + LAY.regions.map((r, k) => '<span style="white-space:nowrap"><i class="r' + k + '"></i>' + esc(r) + '</span>').join("") + '<span style="white-space:nowrap"><i style="background:#E8E2D6"></i>灰＝記録なし</span><br>枠の<span style="white-space:nowrap"><i style="border:1px solid var(--ink)"></i>実線＝年が分かる</span><span style="white-space:nowrap"><i style="border:1px dashed var(--ink)"></i>破線＝年が分からない</span>' : "";
 }
 function drawTree(key, pos, edges, onIdx, head, cap){
   treeShell();
