@@ -993,9 +993,11 @@ function sizeBox(){
   const top = box.getBoundingClientRect().top + window.scrollY;
   box.style.height = Math.max(320, window.innerHeight - top - cap.offsetHeight - 14) + "px";
 }
-const LEGEND = '<span class="m">朱</span>＝母　<span class="f">藍</span>＝父<br>点線の <span style="white-space:nowrap"><span class="u">灰</span>＝母か父か不明</span>　<span style="white-space:nowrap"><span class="s2">緑</span>＝選び出した元</span>　<span style="white-space:nowrap"><span class="a">紫</span>＝別の資料</span>';   // 線の詳しい意味は系図の画面で
+const nw = x => '<span style="white-space:nowrap">' + x + '</span>';
+const LEGEND = '線：' + [nw('<span class="m">朱</span>＝母'), nw('<span class="f">藍</span>＝父'), nw('<span class="u">灰</span>＝母か父か不明'), nw('<span class="s2">緑</span>＝選び出した元'), nw('<span class="a">紫</span>＝別の資料')].join("　");
 function legendTint(){
-  return LAY.tint ? '<br>箱の地の色＝育成した地方' + LAY.regions.map((r, k) => '<span style="white-space:nowrap"><i class="r' + k + '"></i>' + esc(r) + '</span>').join("") + '<span style="white-space:nowrap"><i style="background:#E8E2D6"></i>灰＝記録なし</span><br>枠の<span style="white-space:nowrap"><i style="border:1px solid var(--ink)"></i>実線＝年が分かる</span><span style="white-space:nowrap"><i style="border:1px dashed var(--ink)"></i>破線＝年が分からない</span>' : "";
+  return LAY.tint ? '<br>箱：育成した地方' + LAY.regions.map((r, k) => nw('<i class="r' + k + '"></i>' + esc(r))).join("") + nw('<i style="background:#E8E2D6"></i>記録なし') +
+    '<br>枠：' + nw('実線＝年が分かる') + '　' + nw('破線＝年が分からない') : "";
 }
 function drawTree(key, pos, edges, onIdx, head, cap){
   treeShell();
