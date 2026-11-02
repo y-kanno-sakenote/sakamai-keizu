@@ -994,7 +994,7 @@ function sizeBox(){
 }
 const LEGEND = '<span class="m">朱</span>＝母　<span class="f">藍</span>＝父　<span class="u">点線・破線</span>＝くわしくは系図で';   // 線の詳しい意味は系図の画面で
 function legendTint(){
-  return LAY.tint ? '<br>箱の地の色＝育成した地方' + LAY.regions.map((r, k) => '<span style="white-space:nowrap"><i class="r' + k + '"></i>' + esc(r) + '</span>').join("") : "";
+  return LAY.tint ? '<br>箱の地の色＝育成した地方' + LAY.regions.map((r, k) => '<span style="white-space:nowrap"><i class="r' + k + '"></i>' + esc(r) + '</span>').join("") + '<span style="white-space:nowrap"><i style="background:var(--bg)"></i>無地＝育成地の記録なし</span>' : "";
 }
 function drawTree(key, pos, edges, onIdx, head, cap){
   treeShell();
